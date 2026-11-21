@@ -8,7 +8,10 @@ Oyuncak temali Roblox "Battlegrounds" arena dovusu. Unreal projesinden (ProjectT
 
 ## Calisma duzeni
 - Kod `src/` altinda Luau dosyalari (Rojo duzeni). Studio'da elle kod yazilmaz, dosyada tutulur.
-- Derle: `node tools/build.cjs` -> `build/ToyBattlegrounds.rbxlx`. Kullanici Studio'da acar (Turkiye'de Roblox icin VPN gerekir).
+- ASIL YOL: Rojo 7.4.4 (`%LOCALAPPDATA%\rojo\rojo.exe`, Studio eklentisi kurulu). Kullanici yayinlanmis oyunu Studio'da acar, `baslat.cmd` calistirir, Rojo eklentisinden Connect. Kod canli gecer, Studio'daki modeller korunur ($ignoreUnknownInstances).
+- Modeller: `modeller/Roblox/*.fbx` (`tools/roblox_fbx.py` ile Blender'dan: ayakta, parca adi R_RRGGBB = renk). Studio'da import -> ReplicatedStorage/Oyuncaklar/<Ad> (Kovboy, Astronot, Domuz). Gorunum.luau once orayi, yoksa Config ModelId'yi kullanir.
+- Copilot CLI kurulu (`copilot`, npm global); kullanici girisi gerekir.
+- Eski yol: `node tools/build.cjs` -> `build/ToyBattlegrounds.rbxlx`. Kullanici Studio'da acar (Turkiye'de Roblox icin VPN gerekir).
 - Dosya turu: `*.server.luau` Script, `*.client.luau` LocalScript, `*.luau` ModuleScript.
 - Harita kodla kurulur (`src/ServerScriptService/Harita.server.luau`), yerlesim dosyasinda Workspace yok.
 - Git: branch `main`, commit mesaji Turkce ASCII. Anil ile: herkes kendi branch'i, `EKIP.md` once okunur.

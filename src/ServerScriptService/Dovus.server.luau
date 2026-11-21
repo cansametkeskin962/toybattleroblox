@@ -455,7 +455,7 @@ local function karakterDinle(player, char)
 	end)
 end
 
-Players.PlayerAdded:Connect(function(player)
+local function oyuncuDinle(player)
 	seriSayac[player] = 0
 	player.CharacterAdded:Connect(function(char)
 		karakterDinle(player, char)
@@ -463,7 +463,11 @@ Players.PlayerAdded:Connect(function(player)
 	if player.Character then
 		task.spawn(karakterDinle, player, player.Character)
 	end
-end)
+end
+Players.PlayerAdded:Connect(oyuncuDinle)
+for _, p in ipairs(Players:GetPlayers()) do
+	task.spawn(oyuncuDinle, p)
+end
 
 Players.PlayerRemoving:Connect(function(player)
 	sonSaldiri[player] = nil

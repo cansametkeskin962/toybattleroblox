@@ -252,6 +252,11 @@ local function aksesuarEkle(character, oyuncakAdi, oyuncak)
 end
 
 local function karakterHazirla(player, character)
+	-- CharacterAdded karakter Workspace'e konmadan gelir: konmasini bekle
+	local bas = os.clock()
+	while not character.Parent and os.clock() - bas < 5 do
+		task.wait()
+	end
 	local humanoid = character:WaitForChild("Humanoid", 5)
 	local head = character:WaitForChild("Head", 5)
 	if not humanoid or not head or not character.Parent then
@@ -323,10 +328,13 @@ local function karakterHazirla(player, character)
 end
 
 -- Oyuncu girisi
-Players.PlayerAdded:Connect(function(player)
+local function oyuncuGeldi(player)
 	player.CharacterAdded:Connect(function(character)
 		karakterHazirla(player, character)
 	end)
+	if player.Character then
+		task.spawn(karakterHazirla, player, player.Character)
+	end
 
 	local veri = Veri.Yukle(player)
 	if not player.Parent then
@@ -356,7 +364,13 @@ Players.PlayerAdded:Connect(function(player)
 			player:LoadCharacter()
 		end
 	end
-end)
+end
+
+-- Script gec yuklenirse (Studio testi) ilk oyuncuyu kacirmasin
+Players.PlayerAdded:Connect(oyuncuGeldi)
+for _, p in ipairs(Players:GetPlayers()) do
+	task.spawn(oyuncuGeldi, p)
+end
 
 Players.PlayerRemoving:Connect(function(player)
 	secimBekleme[player] = nil
