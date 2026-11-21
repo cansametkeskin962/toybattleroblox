@@ -1,12 +1,14 @@
 {
   "name": "ToyBattlegrounds",
+  "servePort": 34872,
   "tree": {
     "$className": "DataModel",
-    "ServerScriptService": { "$path": "src/ServerScriptService" },
-    "ReplicatedStorage": { "$path": "src/ReplicatedStorage" },
-    "StarterGui": { "$path": "src/StarterGui" },
+    "ServerScriptService": { "$path": "src/ServerScriptService", "$ignoreUnknownInstances": true },
+    "ReplicatedStorage": { "$path": "src/ReplicatedStorage", "$ignoreUnknownInstances": true },
+    "StarterGui": { "$path": "src/StarterGui", "$ignoreUnknownInstances": true },
     "StarterPlayer": {
-      "StarterPlayerScripts": { "$path": "src/StarterPlayer/StarterPlayerScripts" }
+      "$ignoreUnknownInstances": true,
+      "StarterPlayerScripts": { "$path": "src/StarterPlayer/StarterPlayerScripts", "$ignoreUnknownInstances": true }
     }
   }
 }

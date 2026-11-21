@@ -273,7 +273,7 @@ local function karakterHazirla(player, character)
 
 	gorunumBoya(character, oyuncak.Renk)
 	aksesuarEkle(character, oyuncakAdi, oyuncak)
-	local modelli = Gorunum.Giydir(character, oyuncak)
+	local modelli = Gorunum.Giydir(character, oyuncak, oyuncakAdi)
 
 	-- Gec yuklenen avatar kiyafet/aksesuarlarini da temizle
 	local baglanti

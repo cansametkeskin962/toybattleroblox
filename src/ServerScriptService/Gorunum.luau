@@ -28,14 +28,19 @@ local function sablonAl(id)
 end
 
 -- true donerse oyuncak modeli giydirildi
-function Gorunum.Giydir(character, oyuncak)
+function Gorunum.Giydir(character, oyuncak, ad)
+	-- Once oyunun icindeki ReplicatedStorage/Oyuncaklar/<ad> modeline bak, yoksa ModelId ile yukle
+	local klasor = game:GetService("ReplicatedStorage"):FindFirstChild("Oyuncaklar")
+	local sablon = klasor and ad and klasor:FindFirstChild(ad)
 	local id = oyuncak.ModelId or 0
-	if id <= 0 then
-		return false
+	if not sablon then
+		if id <= 0 then
+			return false
+		end
+		sablon = sablonAl(id)
 	end
 	local kok = character:FindFirstChild("HumanoidRootPart")
 	local humanoid = character:FindFirstChildOfClass("Humanoid")
-	local sablon = sablonAl(id)
 	if not kok or not humanoid or not sablon then
 		return false
 	end
