@@ -54,6 +54,15 @@ function Gorunum.Giydir(character, oyuncak, ad)
 			p.CanQuery = false
 			p.CanTouch = false
 			p.Massless = true
+			-- Blender'da parca adina yazilan renk: R_RRGGBB_n
+			local hex = string.match(p.Name, "R_(%x%x%x%x%x%x)")
+			if hex then
+				p.Color = Color3.fromHex(hex)
+				if p:IsA("MeshPart") then
+					p.TextureID = ""
+				end
+				p.Material = Enum.Material.SmoothPlastic
+			end
 			table.insert(parcalar, p)
 		end
 	end
