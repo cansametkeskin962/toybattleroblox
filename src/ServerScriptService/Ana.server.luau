@@ -5,6 +5,7 @@ local ServerScriptService = game:GetService("ServerScriptService")
 
 local Config = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Config"))
 local Veri = require(ServerScriptService:WaitForChild("Veri"))
+local Gorunum = require(ServerScriptService:WaitForChild("Gorunum"))
 
 -- Dogma ayarlarinin uygulanmasi
 Players.CharacterAutoLoads = true
@@ -272,6 +273,7 @@ local function karakterHazirla(player, character)
 
 	gorunumBoya(character, oyuncak.Renk)
 	aksesuarEkle(character, oyuncakAdi, oyuncak)
+	local modelli = Gorunum.Giydir(character, oyuncak)
 
 	-- Gec yuklenen avatar kiyafet/aksesuarlarini da temizle
 	local baglanti
@@ -305,8 +307,11 @@ local function karakterHazirla(player, character)
 					cocuk.TorsoColor3 = oyuncak.Renk
 				end
 			end)
-		elseif cocuk:IsA("BasePart") then
+		elseif cocuk:IsA("BasePart") and cocuk.Name ~= "OyuncakModel" then
 			cocuk.Color = oyuncak.Renk
+			if modelli then
+				cocuk.Transparency = 1
+			end
 		end
 	end)
 
