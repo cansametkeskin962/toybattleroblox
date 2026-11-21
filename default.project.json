@@ -1,0 +1,12 @@
+{
+  "name": "ToyBattlegrounds",
+  "tree": {
+    "$className": "DataModel",
+    "ServerScriptService": { "$path": "src/ServerScriptService" },
+    "ReplicatedStorage": { "$path": "src/ReplicatedStorage" },
+    "StarterGui": { "$path": "src/StarterGui" },
+    "StarterPlayer": {
+      "StarterPlayerScripts": { "$path": "src/StarterPlayer/StarterPlayerScripts" }
+    }
+  }
+}
