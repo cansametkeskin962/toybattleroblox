@@ -39,7 +39,7 @@ Config.Oyuncaklar = {
 	},
 	Domuz = {
 		Sira = 3,
-		Fiyat = 150,
+		Fiyat = 0, -- test icin 0, sonra 150
 		ModelId = 74513126962519, -- Studio'da import + Save to Roblox sonrasi asset id
 		ModelBoy = 5.5,
 		ModelDonus = 0, -- model ters bakiyorsa 180

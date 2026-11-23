@@ -44,6 +44,9 @@ function Gorunum.Giydir(character, oyuncak, ad)
 	if not kok or not humanoid or not sablon then
 		return false
 	end
+	pcall(function()
+		humanoid:ApplyDescription(Instance.new("HumanoidDescription"))
+	end)
 
 	local model = sablon:Clone()
 	local parcalar = {}
@@ -97,18 +100,33 @@ function Gorunum.Giydir(character, oyuncak, ad)
 	oyuncakKok.Massless = true
 	oyuncakKok.CFrame = kok.CFrame
 	oyuncakKok.Parent = model
+	local eskiModelVar = false
 	for _, p in ipairs(parcalar) do
 		local w = Instance.new("WeldConstraint")
-		w.Part0 = oyuncakKok
+		local prefix = string.match(p.Name, "^(%w+)__")
+		local bodyPart = prefix and character:FindFirstChild(prefix)
+		if bodyPart and bodyPart:IsA("BasePart") then
+			w.Part0 = bodyPart
+		else
+			w.Part0 = oyuncakKok
+			eskiModelVar = true
+		end
 		w.Part1 = p
 		w.Parent = p
 	end
-	local kaynak = Instance.new("Weld")
-	kaynak.Name = "OyuncakKaynak"
-	kaynak.Part0 = kok
-	kaynak.Part1 = oyuncakKok
-	kaynak.C0 = CFrame.new()
-	kaynak.Parent = kok
+	if eskiModelVar then
+		local kaynak = Instance.new("Weld")
+		kaynak.Name = "OyuncakKaynak"
+		kaynak.Part0 = kok
+		kaynak.Part1 = oyuncakKok
+		kaynak.C0 = CFrame.new()
+		kaynak.Parent = kok
+	else
+		local kaynak = Instance.new("WeldConstraint")
+		kaynak.Part0 = kok
+		kaynak.Part1 = oyuncakKok
+		kaynak.Parent = oyuncakKok
+	end
 
 	model.Name = "OyuncakModel"
 	model.Parent = character
