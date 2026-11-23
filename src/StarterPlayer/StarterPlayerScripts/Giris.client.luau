@@ -1,5 +1,5 @@
 -- Giris.client.luau
--- Oyuncu kontrolleri: M1 / Q / E / Blok (klavye, fare, dokunmatik, oyun kolu),
+-- Oyuncu kontrolleri: M1 / Q / R / Blok (klavye, fare, dokunmatik, oyun kolu),
 -- mobil butonlar ve omuz kamerasi (Shift Lock benzeri).
 
 local Players = game:GetService("Players")
@@ -24,14 +24,14 @@ local FAREYI_KILITLE = true -- PC'de fare ekran ortasina kilitlenir (Sol Alt bas
 local KAMERA_OFSETI = Vector3.new(1.75, 0.25, 0) -- omuz kamerasi kaymasi
 local DOKUNMA_MAKS_SURE = 0.25 -- bu sureden kisa dokunus = M1
 local DOKUNMA_MAKS_KAYMA = 18 -- piksel; daha fazla kayarsa kamera cevirme sayilir
-local VARSAYILAN_BEKLEME = { M1 = 0.35, Q = 5, E = 5 }
+local VARSAYILAN_BEKLEME = { M1 = 0.35, Q = 5, R = 0 }
 
 local FONT = Enum.Font.FredokaOne
 local KOYU = Color3.fromRGB(45, 40, 70)
 local BEYAZ = Color3.new(1, 1, 1)
 
 -- ===================== DURUM =====================
-local hazirZamani = { M1 = 0, Q = 0, E = 0 } -- tus bu zamandan sonra tekrar kullanilabilir
+local hazirZamani = { M1 = 0, Q = 0, R = 0 } -- tus bu zamandan sonra tekrar kullanilabilir
 local m1Kaynaklari = {} -- basili tutulan M1 kaynaklari (fare, mobil buton, kol)
 local blokKaynaklari = {} -- basili tutulan blok kaynaklari (F, mobil buton, kol)
 local dokunmalar = {} -- [InputObject] = {Zaman, Konum} ekrana yapilan dokunuslar
@@ -230,7 +230,7 @@ do
 	local tanimlar = {
 		{ Tus = "M1", Metin = "M1", Boyut = 96, Merkez = Vector2.new(170, 140), Renk = Color3.fromRGB(255, 120, 120) },
 		{ Tus = "Q", Metin = "Q", Boyut = 66, Merkez = Vector2.new(60, 160), Renk = Color3.fromRGB(110, 175, 255) },
-		{ Tus = "E", Metin = "E", Boyut = 66, Merkez = Vector2.new(80, 70), Renk = Color3.fromRGB(170, 130, 255) },
+		{ Tus = "R", Metin = "R", Boyut = 66, Merkez = Vector2.new(80, 70), Renk = Color3.fromRGB(255, 170, 80) },
 		{ Tus = "Blok", Metin = "BLOK", Boyut = 66, Merkez = Vector2.new(170, 40), Renk = Color3.fromRGB(120, 210, 140) },
 	}
 	for _, t in ipairs(tanimlar) do
@@ -290,8 +290,8 @@ UserInputService.InputBegan:Connect(function(girdi, oyunIsledi)
 	local tus = girdi.KeyCode
 	if tus == Enum.KeyCode.Q or tus == Enum.KeyCode.ButtonX then
 		saldir("Q")
-	elseif tus == Enum.KeyCode.E or tus == Enum.KeyCode.ButtonY then
-		saldir("E")
+	elseif tus == Enum.KeyCode.R or tus == Enum.KeyCode.ButtonY then
+		saldir("R")
 	elseif tus == Enum.KeyCode.F then
 		blokKaynaklari.Klavye = true
 		blokGuncelle()
@@ -367,6 +367,12 @@ RunService.Heartbeat:Connect(function()
 		saldir("M1")
 	end
 	blokGuncelle()
+
+	-- Cifte Tabanca gibi aktif ult ler icin sunucuya guncel 3D nisani gonder.
+	local kamera = workspace.CurrentCamera
+	if kamera and oyuncu.Character then
+		SaldirRemote:FireServer("RNisan", kamera.CFrame.LookVector)
+	end
 
 	-- Mobil butonlar
 	local goster = UserInputService.TouchEnabled and not arayuzAcik()

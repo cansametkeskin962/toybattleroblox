@@ -6,6 +6,7 @@ Config.OlduruPara = 10 -- oldurme basina para
 Config.OlayAraligi = 90 -- surpriz olay araligi (sn)
 Config.BlokHasarCarpani = 0.3 -- blok yaparken alinan hasar orani
 Config.KomboSifirlama = 1.2 -- M1 vuruslari arasi bu kadar gecerse kombo basa doner
+Config.UltiKazanc = 1.0 -- verilen hasar basina ulti puani
 
 -- Oyuncaklar. Fiyat 0 = bedava.
 Config.Oyuncaklar = {
@@ -18,10 +19,10 @@ Config.Oyuncaklar = {
 		Can = 100,
 		Hiz = 18,
 		Renk = Color3.fromRGB(196, 120, 60),
-		Aciklama = "Kement ile ceker, tabancayla uzaktan vurur.",
+		Aciklama = "Kementle ceker, cift tabancayla ates eder.",
 		M1 = { Hasar = 7, Menzil = 6, Bekleme = 0.35, SonVurusItme = 45 },
-		Q = { Ad = "Kement", Hasar = 8, Menzil = 40, Bekleme = 6 },
-		E = { Ad = "Tabanca", Hasar = 14, Menzil = 80, Bekleme = 4 },
+		Q = { Ad = "Kement", Aciklama = "Hedefi cekip kisa sure sersemletir.", Hasar = 8, Menzil = 45, Bekleme = 6 },
+		R = { Ad = "Cifte Tabanca", Aciklama = "3 saniye boyunca iki elden ates eder.", Hasar = 5, Menzil = 90, Sure = 3, Bekleme = 0 },
 	},
 	Astronot = {
 		Sira = 2,
@@ -32,10 +33,10 @@ Config.Oyuncaklar = {
 		Can = 110,
 		Hiz = 16,
 		Renk = Color3.fromRGB(235, 235, 245),
-		Aciklama = "Jetpack ile ziplar, yere carpip etraftakileri ucurur.",
+		Aciklama = "Jetpackle ucar, uzay lazeriyle alan vurur.",
 		M1 = { Hasar = 8, Menzil = 6, Bekleme = 0.4, SonVurusItme = 50 },
-		Q = { Ad = "Jetpack", Hasar = 0, Menzil = 0, Bekleme = 5 },
-		E = { Ad = "Yere Carpma", Hasar = 20, Menzil = 14, Bekleme = 8 },
+		Q = { Ad = "Jetpack", Aciklama = "3 saniye kontrollu ucar; tekrar Q ile bitirir.", Hasar = 0, Menzil = 0, Sure = 3, Bekleme = 7 },
+		R = { Ad = "Uzay Lazeri", Aciklama = "Hedef noktaya gecikmeli, genis lazer indirir.", Hasar = 7, Menzil = 80, Sure = 3, Bekleme = 0 },
 	},
 	Domuz = {
 		Sira = 3,
@@ -46,10 +47,10 @@ Config.Oyuncaklar = {
 		Can = 140,
 		Hiz = 15,
 		Renk = Color3.fromRGB(255, 160, 180),
-		Aciklama = "Kumbara domuz. Kafa atarak dalar, gobekle zipliyor.",
+		Aciklama = "Kafa atarak dalar, gobek depremiyle herkesi savurur.",
 		M1 = { Hasar = 9, Menzil = 6, Bekleme = 0.45, SonVurusItme = 60 },
-		Q = { Ad = "Dalis", Hasar = 15, Menzil = 30, Bekleme = 6 },
-		E = { Ad = "Gobek Zipla", Hasar = 18, Menzil = 12, Bekleme = 7 },
+		Q = { Ad = "Dalis", Aciklama = "Ileriye hizla dalip ilk rakibi savurur.", Hasar = 15, Menzil = 30, Bekleme = 6 },
+		R = { Ad = "Gobek Depremi", Aciklama = "Buyuk ziplayis sonrasi 20 studluk sok dalgasi yaratir.", Hasar = 30, Menzil = 20, Sure = 2.5, Bekleme = 0 },
 	},
 }
 
@@ -57,7 +58,7 @@ Config.Oyuncaklar = {
 Config.Remote = {
 	SecimYap = "SecimYap", -- client->server (oyuncakAdi)
 	SatinAl = "SatinAl", -- client->server (oyuncakAdi)
-	Saldir = "Saldir", -- client->server (tus "M1"|"Q"|"E", hedefYonu Vector3)
+	Saldir = "Saldir", -- client->server (tus "M1"|"Q"|"R"|"RNisan", hedefYonu Vector3)
 	Blok = "Blok", -- client->server (aktif bool)
 	Durum = "Durum", -- server->client ({Para, Acik={ad=true}, Secili})
 	Bildirim = "Bildirim", -- server->client(lar) (metin, renk Color3?)

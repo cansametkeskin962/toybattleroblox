@@ -1,3 +1,4 @@
 build/
 *.rbxl.lock
 *.rbxlx.lock
+GOREV.txt

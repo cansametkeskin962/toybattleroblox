@@ -18,6 +18,7 @@ local FONT = Enum.Font.FredokaOne
 local KOYU = Color3.fromRGB(45, 40, 70)
 local BEYAZ = Color3.new(1, 1, 1)
 local rastgele = Random.new()
+local jetler = {}
 
 -- Yerel efekt parcalari burada durur
 local efektKlasoru = Instance.new("Folder")
@@ -288,6 +289,99 @@ local function jetEfekti(veri)
 	end
 end
 
+local function jetBasla(veri)
+	local karakter = veri.Karakter
+	if typeof(karakter) ~= "Instance" or not karakter:IsA("Model") then return end
+	local kok = karakter:FindFirstChild("HumanoidRootPart") or karakter.PrimaryPart
+	if not kok or jetler[karakter] then return end
+	local klasor = Instance.new("Folder")
+	klasor.Name = "JetParcaciklari"
+	klasor.Parent = kok
+	for _, x in ipairs({ -0.45, 0.45 }) do
+		local ek = Instance.new("Attachment")
+		ek.Position = Vector3.new(x, -0.6, 0.9)
+		ek.Parent = klasor
+		local yayici = Instance.new("ParticleEmitter")
+		yayici.Texture = "rbxasset://textures/particles/fire_main.dds"
+		yayici.Color = ColorSequence.new(Color3.fromRGB(255, 170, 35))
+		yayici.Lifetime = NumberRange.new(0.2, 0.4)
+		yayici.Rate = 90
+		yayici.Speed = NumberRange.new(9, 15)
+		yayici.EmissionDirection = Enum.NormalId.Bottom
+		yayici.Parent = ek
+	end
+	jetler[karakter] = klasor
+end
+
+local function jetBitis(veri)
+	local klasor = jetler[veri.Karakter]
+	if klasor then
+		jetler[veri.Karakter] = nil
+		klasor:Destroy()
+	end
+end
+
+local function kementEfekti(veri)
+	local bas, son = veri.Bas, veri.Son
+	if typeof(bas) ~= "Vector3" or typeof(son) ~= "Vector3" then return end
+	local uzunluk = (son - bas).Magnitude
+	if uzunluk < 0.05 then return end
+	local ip = parcaYap({
+		Shape = Enum.PartType.Cylinder,
+		Size = Vector3.new(0.12, uzunluk, 0.12),
+		Color = Color3.fromRGB(125, 70, 35),
+		Material = Enum.Material.SmoothPlastic,
+		CFrame = CFrame.lookAt(bas, son) * CFrame.Angles(math.rad(90), 0, 0) * CFrame.new(0, -uzunluk / 2, 0),
+	})
+	oynat(ip, 0.15, { Transparency = 1 })
+	Debris:AddItem(ip, 0.2)
+	local halka = parcaYap({
+		Shape = Enum.PartType.Cylinder,
+		Size = Vector3.new(0.18, 1.4, 1.4),
+		Color = Color3.fromRGB(170, 95, 40),
+		CFrame = CFrame.new(son) * CFrame.Angles(0, 0, math.rad(90)),
+	})
+	oynat(halka, 0.2, { Size = Vector3.new(0.04, 2.2, 2.2), Transparency = 1 })
+	Debris:AddItem(halka, 0.25)
+end
+
+local function lazerUyari(veri)
+	local konum = veri.Konum
+	if typeof(konum) ~= "Vector3" then return end
+	local uyari = parcaYap({
+		Shape = Enum.PartType.Cylinder,
+		Size = Vector3.new(0.08, 16, 16),
+		Color = Color3.fromRGB(255, 45, 45),
+		Transparency = 0.35,
+		CFrame = CFrame.new(konum + Vector3.new(0, 0.05, 0)) * CFrame.Angles(0, 0, math.rad(90)),
+	})
+	oynat(uyari, 1, { Transparency = 0.05, Size = Vector3.new(0.08, 18, 18) })
+	Debris:AddItem(uyari, 1.1)
+end
+
+local function lazerEfekti(veri)
+	local konum = veri.Konum
+	if typeof(konum) ~= "Vector3" then return end
+	local zemin = parcaYap({
+		Shape = Enum.PartType.Cylinder,
+		Size = Vector3.new(0.2, 16, 16),
+		Color = Color3.fromRGB(255, 30, 30),
+		Transparency = 0.25,
+		CFrame = CFrame.new(konum + Vector3.new(0, 0.1, 0)) * CFrame.Angles(0, 0, math.rad(90)),
+	})
+	local isin = parcaYap({
+		Shape = Enum.PartType.Cylinder,
+		Size = Vector3.new(120, 6, 6),
+		Color = Color3.fromRGB(255, 40, 40),
+		CFrame = CFrame.new(konum + Vector3.new(0, 60, 0)),
+	})
+	oynat(isin, 2, { Transparency = 1 })
+	oynat(zemin, 2, { Transparency = 1 })
+	Debris:AddItem(isin, 2.1)
+	Debris:AddItem(zemin, 2.1)
+	if bizeUzaklik(konum) < 40 then kameraSars(0.8) end
+end
+
 -- Yerde genisleyen halka + toz
 local function carpmaEfekti(veri)
 	local konum = veri.Konum
@@ -420,9 +514,16 @@ end
 local isleyiciler = {
 	vurus = vurusEfekti,
 	kursun = kursunEfekti,
+	tabanca = kursunEfekti,
 	jet = jetEfekti,
+	jetBasla = jetBasla,
+	jetBitis = jetBitis,
 	carpma = carpmaEfekti,
 	hasar = hasarEfekti,
+	kement = kementEfekti,
+	lazerUyari = lazerUyari,
+	lazer = lazerEfekti,
+	deprem = carpmaEfekti,
 }
 
 EfektRemote.OnClientEvent:Connect(function(tur, veri)
@@ -438,9 +539,7 @@ EfektRemote.OnClientEvent:Connect(function(tur, veri)
 		Bas = veri.Bas or veri.baslangic,
 		Son = veri.Son or veri.bitis,
 	}
-	if tur == "kement" then
-		tur = "kursun"
-	elseif tur == "dalis" then
+	if tur == "dalis" then
 		tur = "jet"
 	end
 	local isleyici = isleyiciler[tur]

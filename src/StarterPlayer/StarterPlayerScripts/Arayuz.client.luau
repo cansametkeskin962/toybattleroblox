@@ -35,8 +35,8 @@ local RENK = {
 	YaziGri = Color3.fromRGB(95, 88, 115),
 }
 local MOBIL = UserInputService.TouchEnabled and not UserInputService.MouseEnabled
-local TUSLAR = { "M1", "Q", "E" }
-local TUS_METNI = { M1 = MOBIL and "M1" or "TIK", Q = "Q", E = "E" }
+local TUSLAR = { "M1", "Q", "R" }
+local TUS_METNI = { M1 = MOBIL and "M1" or "TIK", Q = "Q", R = "R" }
 local MAKS_BILDIRIM = 4
 
 local durum = { Para = 0, Acik = {}, Secili = nil }
@@ -159,7 +159,7 @@ local altPanel = yeni("Frame", {
 	Name = "AltPanel",
 	AnchorPoint = Vector2.new(0.5, 1),
 	Position = UDim2.new(0.5, 0, 1, -16),
-	Size = UDim2.fromOffset(360, 160),
+	Size = UDim2.fromOffset(360, 204),
 	BackgroundTransparency = 1,
 }, hud)
 
@@ -195,9 +195,26 @@ local canYazi = yazi(canBari, {
 	ZIndex = 3,
 })
 
+local ultiBari = yeni("Frame", {
+	Name = "UltiBari",
+	Position = UDim2.new(0, 0, 0, 44),
+	Size = UDim2.new(1, 0, 0, 26),
+	BackgroundColor3 = Color3.fromRGB(70, 62, 95),
+}, altPanel)
+kose(ultiBari, UDim.new(1, 0))
+kontur(ultiBari, 3)
+local ultiDolgu = yeni("Frame", {
+	Name = "Dolgu",
+	Size = UDim2.fromScale(0, 1),
+	BackgroundColor3 = RENK.Mor,
+	BorderSizePixel = 0,
+}, ultiBari)
+kose(ultiDolgu, UDim.new(1, 0))
+local ultiYazi = yazi(ultiBari, { Size = UDim2.fromScale(1, 1), Text = "ULTI", ZIndex = 3 })
+
 local yetenekSatiri = yeni("Frame", {
 	Name = "Yetenekler",
-	Position = UDim2.new(0, 0, 0, 54),
+	Position = UDim2.new(0, 0, 0, 78),
 	Size = UDim2.new(1, 0, 0, 104),
 	BackgroundTransparency = 1,
 }, altPanel)
@@ -280,7 +297,7 @@ if MOBIL then
 	yetenekSatiri.Visible = false
 	altPanel.AnchorPoint = Vector2.new(0, 0)
 	altPanel.Position = UDim2.fromOffset(16, 68)
-	altPanel.Size = UDim2.fromOffset(230, 38)
+	altPanel.Size = UDim2.fromOffset(230, 64)
 end
 
 -- Bildirim alani (ust orta)
@@ -347,6 +364,22 @@ local function canGuncelle()
 	canYazi.Text = metin
 end
 
+local function ultiGuncelle()
+	local karakter = oyuncu.Character
+	local deger = karakter and karakter:GetAttribute("Ulti") or 0
+	local oran = math.clamp(typeof(deger) == "number" and deger / 100 or 0, 0, 1)
+	ultiDolgu.Size = UDim2.fromScale(oran, 1)
+	if oran >= 1 then
+		ultiDolgu.BackgroundColor3 = RENK.Sari
+		ultiYazi.Text = "R HAZIR!"
+		ultiBari.BackgroundColor3 = RENK.Koyu
+	else
+		ultiDolgu.BackgroundColor3 = RENK.Mor
+		ultiYazi.Text = "ULTI"
+		ultiBari.BackgroundColor3 = Color3.fromRGB(70, 62, 95)
+	end
+end
+
 local function karakterBagla(karakter)
 	for _, baglanti in ipairs(canBaglantilari) do
 		baglanti:Disconnect()
@@ -361,7 +394,9 @@ local function karakterBagla(karakter)
 	aktifInsan = insan
 	table.insert(canBaglantilari, insan.HealthChanged:Connect(canGuncelle))
 	table.insert(canBaglantilari, insan:GetPropertyChangedSignal("MaxHealth"):Connect(canGuncelle))
+	table.insert(canBaglantilari, karakter:GetAttributeChangedSignal("Ulti"):Connect(ultiGuncelle))
 	canGuncelle()
+	ultiGuncelle()
 end
 
 local function yetenekleriGuncelle()
@@ -370,7 +405,7 @@ local function yetenekleriGuncelle()
 		local kutu = yetenekKutulari[tus]
 		if veri then
 			if tus == "M1" then
-				kutu.Ad.Text = "Vurus"
+				kutu.Ad.Text = "Yumruk"
 			else
 				kutu.Ad.Text = (veri[tus] and veri[tus].Ad) or "-"
 			end
@@ -681,11 +716,11 @@ for sira, ad in ipairs(siraliAdlar) do
 	yaziSiniri(istatistik, 20)
 
 	local qAd = veri.Q and veri.Q.Ad or "-"
-	local eAd = veri.E and veri.E.Ad or "-"
+	local rAd = veri.R and veri.R.Ad or "-"
 	local yetenekler = yazi(kart, {
 		Position = UDim2.fromOffset(14, 280),
-		Size = UDim2.new(1, -28, 0, 50),
-		Text = "Q: " .. qAd .. "\nE: " .. eAd,
+		Size = UDim2.new(1, -28, 0, 64),
+		Text = "M1: Yumruk\nQ: " .. qAd .. "\nR: " .. rAd,
 		TextColor3 = RENK.Mor,
 		TextStrokeTransparency = 1,
 	})
@@ -834,6 +869,16 @@ end
 
 -- Yetenek kutularinda bekleme karartmasi + geri sayim
 RunService.RenderStepped:Connect(function()
+	local karakter = oyuncu.Character
+	local ulti = karakter and karakter:GetAttribute("Ulti") or 0
+	if typeof(ulti) == "number" and ulti >= 100 then
+		local parlak = 0.75 + math.sin(os.clock() * 6) * 0.25
+		ultiBari.BackgroundTransparency = 1 - parlak * 0.35
+		ultiYazi.TextStrokeTransparency = 0.25 + (1 - parlak) * 0.5
+	else
+		ultiBari.BackgroundTransparency = 0
+		ultiYazi.TextStrokeTransparency = 0
+	end
 	if not yetenekSatiri.Visible then
 		return
 	end
