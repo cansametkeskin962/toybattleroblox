@@ -158,10 +158,12 @@ yaziSiniri(degistirButonu, 24)
 local altPanel = yeni("Frame", {
 	Name = "AltPanel",
 	AnchorPoint = Vector2.new(0.5, 1),
-	Position = UDim2.new(0.5, 0, 1, -16),
+	Position = UDim2.new(0.5, 0, 1, -6),
 	Size = UDim2.fromOffset(360, 204),
 	BackgroundTransparency = 1,
 }, hud)
+-- kucuk ekranda karakteri kapatmasin
+yeni("UIScale", { Scale = 0.7 }, altPanel)
 
 local canBari = yeni("Frame", {
 	Name = "CanBari",

@@ -67,6 +67,29 @@ local function beklemeSuresi(tus)
 	return VARSAYILAN_BEKLEME[tus] or 0.5
 end
 
+local rNisanBitis = 0 -- R aktifken nisan gonderilir
+local sonRNisan = 0
+
+-- Nisan: kameranin ortasindan bakilan noktayi bul, karakterden o noktaya yon ver
+local function nisanYonu(kamera)
+	local char = oyuncu.Character
+	local kok = char and char:FindFirstChild("HumanoidRootPart")
+	if not kok then
+		return kamera.CFrame.LookVector
+	end
+	local params = RaycastParams.new()
+	params.FilterType = Enum.RaycastFilterType.Exclude
+	params.FilterDescendantsInstances = { char }
+	local bas = kamera.CFrame.Position
+	local sonuc = workspace:Raycast(bas, kamera.CFrame.LookVector * 300, params)
+	local hedef = sonuc and sonuc.Position or (bas + kamera.CFrame.LookVector * 300)
+	local yon = hedef - (kok.Position + Vector3.new(0, 0.7, 0))
+	if yon.Magnitude < 0.5 then
+		return kamera.CFrame.LookVector
+	end
+	return yon.Unit
+end
+
 -- Saldiri gonder (istemci tarafi bekleme kontrolu ile)
 local function saldir(tus)
 	if arayuzAcik() then
@@ -85,7 +108,10 @@ local function saldir(tus)
 	end
 	hazirZamani[tus] = simdi + beklemeSuresi(tus)
 	oyuncu:SetAttribute("SonSaldiriZamani", simdi)
-	SaldirRemote:FireServer(tus, kamera.CFrame.LookVector)
+	SaldirRemote:FireServer(tus, nisanYonu(kamera))
+	if tus == "R" then
+		rNisanBitis = simdi + 3.5
+	end
 	return true
 end
 
@@ -370,8 +396,10 @@ RunService.Heartbeat:Connect(function()
 
 	-- Cifte Tabanca gibi aktif ult ler icin sunucuya guncel 3D nisani gonder.
 	local kamera = workspace.CurrentCamera
-	if kamera and oyuncu.Character then
-		SaldirRemote:FireServer("RNisan", kamera.CFrame.LookVector)
+	local simdiN = os.clock()
+	if kamera and oyuncu.Character and simdiN < rNisanBitis and simdiN - sonRNisan > 0.1 then
+		sonRNisan = simdiN
+		SaldirRemote:FireServer("RNisan", nisanYonu(kamera))
 	end
 
 	-- Mobil butonlar

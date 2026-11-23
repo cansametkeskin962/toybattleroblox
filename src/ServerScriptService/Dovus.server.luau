@@ -39,6 +39,8 @@ local function durumGonder(player)
 	durumRemote:FireClient(player, { Para = veri.Para, Acik = acik, Secili = Veri.GetSecili(player) })
 end
 
+local ultiKilit = {} -- [player] = bu zamana kadar ulti dolmaz
+
 local function gecerliVektorMu(v)
 	return typeof(v) == "Vector3"
 		and v.X == v.X and v.Y == v.Y and v.Z == v.Z
@@ -112,7 +114,7 @@ local function hasarVer(hedefChar, miktar, saldiranPlayer)
 		sonVuran.Parent = hum
 		hum:SetAttribute("SonVuranZaman", os.clock())
 		local saldiranChar = saldiranPlayer.Character
-		if saldiranChar then
+		if saldiranChar and not (ultiKilit[saldiranPlayer] and os.clock() < ultiKilit[saldiranPlayer]) then
 			saldiranChar:SetAttribute("Ulti", math.clamp((saldiranChar:GetAttribute("Ulti") or 0) + sonHasar * Config.UltiKazanc, 0, 100))
 		end
 	end
@@ -167,7 +169,9 @@ end)
 saldirRemote.OnServerEvent:Connect(function(player, tus, hedefYonu)
 	if tus == "RNisan" then
 		if gecerliVektorMu(hedefYonu) and aktifR[player] == "Kovboy" then
-			sonAim[player] = hedefYonu.Unit
+			local a = hedefYonu.Unit
+			if a.Y < 0 then a = Vector3.new(a.X, 0, a.Z).Unit end
+			sonAim[player] = a
 		end
 		return
 	end
@@ -186,6 +190,7 @@ saldirRemote.OnServerEvent:Connect(function(player, tus, hedefYonu)
 		local ulti = char:GetAttribute("Ulti") or 0
 		if ulti < 100 then return end
 		char:SetAttribute("Ulti", 0)
+		ultiKilit[player] = os.clock() + 6 -- ulti kendi hasariyla dolmasin
 	else
 		local jetAktif = oyuncakAdi == "Astronot" and tus == "Q" and aktifR[player] == "Jet"
 		if not jetAktif and not (oyuncakAdi == "Astronot" and tus == "Q") then
@@ -194,6 +199,11 @@ saldirRemote.OnServerEvent:Connect(function(player, tus, hedefYonu)
 	end
 
 	local yon = yonBul(hedefYonu, root)
+	-- asagi nisan yere carpmasin: yukari serbest, asagi yok
+	if yon.Y < 0 and oyuncakAdi == "Kovboy" then
+		local duz = Vector3.new(yon.X, 0, yon.Z)
+		yon = duz.Magnitude > 0.01 and duz.Unit or root.CFrame.LookVector
+	end
 	local rayParams = RaycastParams.new()
 	rayParams.FilterType = Enum.RaycastFilterType.Exclude
 	rayParams.FilterDescendantsInstances = { char }
@@ -227,7 +237,8 @@ saldirRemote.OnServerEvent:Connect(function(player, tus, hedefYonu)
 
 	if oyuncakAdi == "Kovboy" and tus == "Q" then
 		local bas = root.Position + Vector3.new(0, 0.7, 0)
-		local sonuc = Workspace:Raycast(bas, yon * ayar.Menzil, rayParams)
+		-- kalin isin: tam nisan gerekmesin
+		local sonuc = Workspace:Spherecast(bas, 2, yon * ayar.Menzil, rayParams)
 		local son = sonuc and sonuc.Position or bas + yon * ayar.Menzil
 		local tuttu = false
 		if sonuc then
@@ -256,7 +267,7 @@ saldirRemote.OnServerEvent:Connect(function(player, tus, hedefYonu)
 				for _, el in ipairs({ "RightHand", "LeftHand" }) do
 					local parca = char:FindFirstChild(el)
 					local bas = parca and parca.Position or root.Position
-					local sonuc = Workspace:Raycast(bas, aim * ayar.Menzil, rayParams)
+					local sonuc = Workspace:Spherecast(bas, 0.8, aim * ayar.Menzil, rayParams)
 					local son = sonuc and sonuc.Position or bas + aim * ayar.Menzil
 					efektRemote:FireAllClients("tabanca", { baslangic = bas, bitis = son })
 					if sonuc then
