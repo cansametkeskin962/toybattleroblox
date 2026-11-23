@@ -321,28 +321,150 @@ local function jetBitis(veri)
 	end
 end
 
+-- ===================== KEMENT =====================
+local IP_RENGI = Color3.fromRGB(150, 95, 45)
+
+-- Ilmek: halka seklinde dizili kucuk parcalar. yerlestir(cf, yaricap): halka cf'nin XZ duzleminde
+local function ilmekYap()
+	local parcalar = {}
+	for i = 1, 14 do
+		parcalar[i] = parcaYap({
+			Shape = Enum.PartType.Cylinder,
+			Size = Vector3.new(0.75, 0.2, 0.2),
+			Color = IP_RENGI,
+			Material = Enum.Material.Fabric,
+		})
+	end
+	local ilmek = {}
+	function ilmek.yerlestir(cf, yaricap)
+		for i, p in ipairs(parcalar) do
+			local a = (i / #parcalar) * math.pi * 2
+			local konum = cf * CFrame.new(math.cos(a) * yaricap, 0, math.sin(a) * yaricap)
+			-- silindir ekseni X: halkaya teget
+			p.Size = Vector3.new(yaricap * 2 * math.pi / #parcalar + 0.1, 0.2, 0.2)
+			p.CFrame = konum * CFrame.Angles(0, -a + math.pi / 2, 0)
+		end
+	end
+	function ilmek.sil(sure)
+		for _, p in ipairs(parcalar) do
+			oynat(p, sure, { Transparency = 1 })
+			Debris:AddItem(p, sure + 0.05)
+		end
+	end
+	return ilmek
+end
+
+local function ipCiz(ip, a, b)
+	local uzunluk = math.max((b - a).Magnitude, 0.05)
+	ip.Size = Vector3.new(uzunluk, 0.16, 0.16)
+	ip.CFrame = CFrame.lookAt(a, b) * CFrame.new(0, 0, -uzunluk / 2) * CFrame.Angles(0, math.rad(90), 0)
+end
+
+local function elKonumu(karakter)
+	local el = karakter and karakter:FindFirstChild("RightHand")
+	return el and el.Position or nil
+end
+
+-- Atmadan once basin ustunde donen ilmek
+local function kementDon(veri)
+	local karakter = veri.Karakter
+	if typeof(karakter) ~= "Instance" then return end
+	local ilmek = ilmekYap()
+	local ip = parcaYap({ Shape = Enum.PartType.Cylinder, Color = IP_RENGI, Material = Enum.Material.Fabric })
+	local t0 = os.clock()
+	local baglanti
+	baglanti = RunService.RenderStepped:Connect(function()
+		local gecen = os.clock() - t0
+		local el = elKonumu(karakter)
+		if gecen > 0.3 or not el then
+			baglanti:Disconnect()
+			ilmek.sil(0.01)
+			ip:Destroy()
+			return
+		end
+		local merkez = CFrame.new(el + Vector3.new(0, 1.2, 0)) * CFrame.Angles(0, gecen * 25, 0) * CFrame.new(1.2, 0, 0)
+		ilmek.yerlestir(merkez * CFrame.Angles(0.25, 0, 0), 1.4)
+		ipCiz(ip, el, merkez.Position)
+	end)
+end
+
 local function kementEfekti(veri)
 	local bas, son = veri.Bas, veri.Son
 	if typeof(bas) ~= "Vector3" or typeof(son) ~= "Vector3" then return end
-	local uzunluk = (son - bas).Magnitude
-	if uzunluk < 0.05 then return end
-	local ip = parcaYap({
-		Shape = Enum.PartType.Cylinder,
-		Size = Vector3.new(0.12, uzunluk, 0.12),
-		Color = Color3.fromRGB(125, 70, 35),
-		Material = Enum.Material.SmoothPlastic,
-		CFrame = CFrame.lookAt(bas, son) * CFrame.Angles(math.rad(90), 0, 0) * CFrame.new(0, -uzunluk / 2, 0),
-	})
-	oynat(ip, 0.15, { Transparency = 1 })
-	Debris:AddItem(ip, 0.2)
-	local halka = parcaYap({
-		Shape = Enum.PartType.Cylinder,
-		Size = Vector3.new(0.18, 1.4, 1.4),
-		Color = Color3.fromRGB(170, 95, 40),
-		CFrame = CFrame.new(son) * CFrame.Angles(0, 0, math.rad(90)),
-	})
-	oynat(halka, 0.2, { Size = Vector3.new(0.04, 2.2, 2.2), Transparency = 1 })
-	Debris:AddItem(halka, 0.25)
+	local karakter = veri.Karakter
+	local hedef = veri.Hedef
+	local hedefKok = typeof(hedef) == "Instance" and hedef:FindFirstChild("HumanoidRootPart")
+	local ilmek = ilmekYap()
+	local ip = parcaYap({ Shape = Enum.PartType.Cylinder, Color = IP_RENGI, Material = Enum.Material.Fabric })
+	local ucus = 0.15
+	local bekle = hedefKok and 0.5 or 0.15
+	local t0 = os.clock()
+	local baglanti
+	baglanti = RunService.RenderStepped:Connect(function()
+		local gecen = os.clock() - t0
+		local el = elKonumu(karakter) or bas
+		local hedefNokta = hedefKok and hedefKok.Parent and hedefKok.Position or son
+		if gecen < ucus then
+			-- havada: hedefe bakan dik halka
+			local a = gecen / ucus
+			local konum = bas:Lerp(hedefNokta, a)
+			ilmek.yerlestir(CFrame.lookAt(konum, hedefNokta + Vector3.new(0, 0.01, 0)) * CFrame.Angles(math.rad(90), 0, 0), 1.5)
+			ipCiz(ip, el, konum)
+		elseif gecen < ucus + bekle then
+			if hedefKok then
+				-- belde sikan halka
+				local a = math.min((gecen - ucus) / 0.12, 1)
+				ilmek.yerlestir(CFrame.new(hedefNokta + Vector3.new(0, 0.3, 0)), 1.6 - a * 0.5)
+			else
+				ilmek.yerlestir(CFrame.new(son - Vector3.new(0, (gecen - ucus) * 6, 0)), 1.5)
+			end
+			ipCiz(ip, el, hedefNokta)
+		else
+			baglanti:Disconnect()
+			ilmek.sil(0.2)
+			oynat(ip, 0.2, { Transparency = 1 })
+			Debris:AddItem(ip, 0.25)
+		end
+	end)
+end
+
+-- ===================== ASTRONOT ISIN =====================
+local function isinSarj(veri)
+	local karakter = veri.Karakter
+	if typeof(karakter) ~= "Instance" then return end
+	local top = parcaYap({ Shape = Enum.PartType.Ball, Size = Vector3.one * 0.3, Color = Color3.fromRGB(120, 230, 255) })
+	local t0 = os.clock()
+	local baglanti
+	baglanti = RunService.RenderStepped:Connect(function()
+		local gecen = os.clock() - t0
+		local silah = karakter:FindFirstChild("GeciciSilah")
+		local namlu = silah and silah:FindFirstChild("Namlu", true)
+		if gecen > 0.5 or not namlu then
+			baglanti:Disconnect()
+			top:Destroy()
+			return
+		end
+		top.Size = Vector3.one * (0.3 + gecen * 3)
+		top.Transparency = 0.1 + math.sin(gecen * 60) * 0.1
+		top.CFrame = CFrame.new(namlu.WorldPosition)
+	end)
+end
+
+local function isinEfekti(veri)
+	local bas, son = veri.Bas, veri.Son
+	if typeof(bas) ~= "Vector3" or typeof(son) ~= "Vector3" then return end
+	local uzunluk = math.max((son - bas).Magnitude, 1)
+	local cf = CFrame.lookAt(bas, son) * CFrame.new(0, 0, -uzunluk / 2) * CFrame.Angles(0, math.rad(90), 0)
+	local dis = parcaYap({ Shape = Enum.PartType.Cylinder, Size = Vector3.new(uzunluk, 5, 5), Color = Color3.fromRGB(70, 160, 255), Transparency = 0.45, CFrame = cf })
+	local ic = parcaYap({ Shape = Enum.PartType.Cylinder, Size = Vector3.new(uzunluk, 2.2, 2.2), Color = Color3.fromRGB(220, 250, 255), CFrame = cf })
+	oynat(dis, 0.45, { Size = Vector3.new(uzunluk, 0.2, 0.2), Transparency = 1 })
+	oynat(ic, 0.45, { Size = Vector3.new(uzunluk, 0.1, 0.1), Transparency = 1 })
+	Debris:AddItem(dis, 0.5)
+	Debris:AddItem(ic, 0.5)
+	local patlama = parcaYap({ Shape = Enum.PartType.Ball, Size = Vector3.one * 3, Color = Color3.fromRGB(150, 230, 255), CFrame = CFrame.new(son) })
+	oynat(patlama, 0.35, { Size = Vector3.one * 9, Transparency = 1 })
+	Debris:AddItem(patlama, 0.4)
+	if bizeUzaklik(bas) < 60 then kameraSars(0.9) end
 end
 
 local function lazerUyari(veri)
@@ -521,6 +643,9 @@ local isleyiciler = {
 	carpma = carpmaEfekti,
 	hasar = hasarEfekti,
 	kement = kementEfekti,
+	kementDon = kementDon,
+	isinSarj = isinSarj,
+	isin = isinEfekti,
 	lazerUyari = lazerUyari,
 	lazer = lazerEfekti,
 	deprem = carpmaEfekti,
@@ -538,6 +663,7 @@ EfektRemote.OnClientEvent:Connect(function(tur, veri)
 		Karakter = veri.Karakter or veri.karakter,
 		Bas = veri.Bas or veri.baslangic,
 		Son = veri.Son or veri.bitis,
+		Hedef = veri.Hedef or veri.hedef,
 	}
 	if tur == "dalis" then
 		tur = "jet"

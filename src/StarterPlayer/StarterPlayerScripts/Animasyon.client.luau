@@ -89,54 +89,60 @@ local function yumruk(karakter, kombo)
 	local solDirsek = motorBul(karakter, "LeftElbow", "LeftLowerArm")
 	local bel = motorBul(karakter, "Waist", "UpperTorso")
 	local kalca = motorBul(karakter, "RightHip", "RightUpperLeg")
-	local sure = 0.08
+	-- Olculen eksenler (AnimationConstraint): omuz X+ = kol ileri, sag omuz Z- = ice,
+	-- dirsek X+ = bukme, bel Y+ = sag omuz one, bel X- = one egil, kalca X+ = bacak ileri
+	local sure = 0.07
 	if kombo == 2 then
-		poz(solOmuz, A(-85, 15, -20), sure, 0.06)
-		poz(solDirsek, A(-15), sure, 0.06)
-		poz(bel, A(0, -25, 0), sure, 0.06)
+		poz(solOmuz, A(92, 0, 12), sure, 0.08, 0.15)
+		poz(solDirsek, A(5), sure, 0.08, 0.15)
+		poz(bel, A(-6, -28, 0), sure, 0.08, 0.15)
 	elseif kombo == 3 then
-		poz(sagOmuz, A(-150, -8, 25), sure, 0.1, 0.18)
-		poz(sagDirsek, A(-40), sure, 0.1, 0.18)
-		poz(bel, A(12, 25, 0), sure, 0.1, 0.18)
-		poz(kalca, A(-25), sure, 0.1, 0.18)
+		poz(sagOmuz, A(155, 0, -12), 0.09, 0.12, 0.2)
+		poz(sagDirsek, A(45), 0.09, 0.12, 0.2)
+		poz(bel, A(4, 22, 0), 0.09, 0.12, 0.2)
+		poz(kalca, A(35), 0.09, 0.12, 0.2)
 	else
-		poz(sagOmuz, A(-85, -15, 20), sure, 0.06)
-		poz(sagDirsek, A(-15), sure, 0.06)
-		poz(bel, A(0, 25, 0), sure, 0.06)
+		poz(sagOmuz, A(92, 0, -12), sure, 0.08, 0.15)
+		poz(sagDirsek, A(5), sure, 0.08, 0.15)
+		poz(bel, A(-6, 28, 0), sure, 0.08, 0.15)
 	end
 end
 
 local function kolIleri(karakter)
-	poz(motorBul(karakter, "RightShoulder", "RightUpperArm"), A(-85, 0, -8), 0.12, 3)
-	poz(motorBul(karakter, "LeftShoulder", "LeftUpperArm"), A(-85, 0, 8), 0.12, 3)
+	poz(motorBul(karakter, "RightShoulder", "RightUpperArm"), A(90, 0, -6), 0.12, 3)
+	poz(motorBul(karakter, "LeftShoulder", "LeftUpperArm"), A(90, 0, 6), 0.12, 3)
 end
 
--- Kement: kolu basin ustune kaldirip dondur, sonra ileri savur
+-- Kement: kolu basin ustune kaldir (ilmek doner), sonra ileri savur
 local function firlat(karakter)
 	local omuz = motorBul(karakter, "RightShoulder", "RightUpperArm")
 	local dirsek = motorBul(karakter, "RightElbow", "RightLowerArm")
 	local bel = motorBul(karakter, "Waist", "UpperTorso")
-	poz(omuz, A(-170, 0, 15), 0.08, 0.04)
-	poz(dirsek, A(-60), 0.08, 0.04)
-	poz(bel, A(0, 30, 0), 0.08, 0.04)
-	task.delay(0.1, function()
-		poz(omuz, A(-170, 120, 15), 0.07, 0)
-	end)
-	task.delay(0.17, function()
-		poz(omuz, A(-80, -10, 10), 0.08, 0.35, 0.2)
-		poz(dirsek, A(-5), 0.08, 0.35, 0.2)
-		poz(bel, A(8, -20, 0), 0.08, 0.35, 0.2)
+	poz(omuz, A(170, 0, 15), 0.1, 0.2)
+	poz(dirsek, A(20), 0.1, 0.2)
+	poz(bel, A(0, -15, 0), 0.1, 0.2)
+	task.delay(0.3, function()
+		poz(omuz, A(95, 0, -8), 0.07, 0.4, 0.2)
+		poz(dirsek, A(0), 0.07, 0.4, 0.2)
+		poz(bel, A(-8, 22, 0), 0.07, 0.4, 0.2)
 	end)
 end
 
 local function yumrukYere(karakter)
-	poz(motorBul(karakter, "RightShoulder", "RightUpperArm"), A(-170, 0, 15), 0.12, 0.1)
-	poz(motorBul(karakter, "LeftShoulder", "LeftUpperArm"), A(-170, 0, -15), 0.12, 0.1)
+	poz(motorBul(karakter, "RightShoulder", "RightUpperArm"), A(170, 0, 15), 0.12, 0.1)
+	poz(motorBul(karakter, "LeftShoulder", "LeftUpperArm"), A(170, 0, -15), 0.12, 0.1)
 	task.delay(0.22, function()
-		poz(motorBul(karakter, "RightShoulder", "RightUpperArm"), A(-30, 0, -10), 0.08, 0.3)
-		poz(motorBul(karakter, "LeftShoulder", "LeftUpperArm"), A(-30, 0, 10), 0.08, 0.3)
-		poz(motorBul(karakter, "Waist", "UpperTorso"), A(25), 0.08, 0.3)
+		poz(motorBul(karakter, "RightShoulder", "RightUpperArm"), A(40, 0, -10), 0.08, 0.3)
+		poz(motorBul(karakter, "LeftShoulder", "LeftUpperArm"), A(40, 0, 10), 0.08, 0.3)
+		poz(motorBul(karakter, "Waist", "UpperTorso"), A(-25), 0.08, 0.3)
 	end)
+end
+
+-- Astronot isin: iki el ileri, govde hafif geri
+local function isinPoz(karakter)
+	poz(motorBul(karakter, "RightShoulder", "RightUpperArm"), A(90, 0, -15), 0.15, 0.9, 0.25)
+	poz(motorBul(karakter, "LeftShoulder", "LeftUpperArm"), A(90, 0, 15), 0.15, 0.9, 0.25)
+	poz(motorBul(karakter, "Waist", "UpperTorso"), A(6), 0.15, 0.9, 0.25)
 end
 
 local function vurusuIsle(veri)
@@ -183,6 +189,8 @@ efektRemote.OnClientEvent:Connect(function(tur, veri)
 		firlat(karakter)
 	elseif tur == "yumrukYere" and typeof(karakter) == "Instance" then
 		yumrukYere(karakter)
+	elseif tur == "isinPoz" and typeof(karakter) == "Instance" then
+		isinPoz(karakter)
 	elseif tur == "vurus" then
 		vurusuIsle(veri)
 	end

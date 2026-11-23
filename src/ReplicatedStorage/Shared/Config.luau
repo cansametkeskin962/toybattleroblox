@@ -22,7 +22,7 @@ Config.Oyuncaklar = {
 		Renk = Color3.fromRGB(196, 120, 60),
 		Aciklama = "Kementle ceker, cift tabancayla ates eder.",
 		M1 = { Hasar = 7, Menzil = 6, Bekleme = 0.35, SonVurusItme = 45 },
-		Q = { Ad = "Kement", Aciklama = "Hedefi cekip kisa sure sersemletir.", Hasar = 8, Menzil = 45, Bekleme = 6 },
+		Q = { Ad = "Kement", Aciklama = "Ilmegi savurur, nisana yakin dusmani yakalayip ceker.", Hasar = 8, Menzil = 45, Bekleme = 6, Yardim = 12 },
 		R = { Ad = "Cifte Tabanca", Aciklama = "3 saniye boyunca iki elden ates eder.", Hasar = 5, Menzil = 90, Sure = 3, Bekleme = 0 },
 	},
 	Astronot = {
@@ -34,10 +34,10 @@ Config.Oyuncaklar = {
 		Can = 110,
 		Hiz = 16,
 		Renk = Color3.fromRGB(235, 235, 245),
-		Aciklama = "Jetpackle ucar, uzay lazeriyle alan vurur.",
+		Aciklama = "Jetpackle ucar, isin tabancasiyla delici isin atar.",
 		M1 = { Hasar = 8, Menzil = 6, Bekleme = 0.4, SonVurusItme = 50 },
 		Q = { Ad = "Jetpack", Aciklama = "3 saniye kontrollu ucar; tekrar Q ile bitirir.", Hasar = 0, Menzil = 0, Sure = 3, Bekleme = 7 },
-		R = { Ad = "Uzay Lazeri", Aciklama = "Hedef noktaya gecikmeli, genis lazer indirir.", Hasar = 7, Menzil = 80, Sure = 3, Bekleme = 0 },
+		R = { Ad = "Plazma Isini", Aciklama = "Kisa sarjdan sonra ileri, herkesi delen dev isin atar.", Hasar = 55, Menzil = 90, Genislik = 3.5, Sarj = 0.5, Bekleme = 0 },
 	},
 	Domuz = {
 		Sira = 3,
