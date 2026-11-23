@@ -7,6 +7,7 @@ Config.OlayAraligi = 90 -- surpriz olay araligi (sn)
 Config.BlokHasarCarpani = 0.3 -- blok yaparken alinan hasar orani
 Config.KomboSifirlama = 1.2 -- M1 vuruslari arasi bu kadar gecerse kombo basa doner
 Config.UltiKazanc = 1.0 -- verilen hasar basina ulti puani
+Config.UltiTest = true -- TEST: ulti hep dolu (R 6 sn'de bir). Yayindan once false yap.
 
 -- Oyuncaklar. Fiyat 0 = bedava.
 Config.Oyuncaklar = {

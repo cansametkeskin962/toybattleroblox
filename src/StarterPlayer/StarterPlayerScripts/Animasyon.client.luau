@@ -1,95 +1,142 @@
 -- Tum oyuncaklar icin yumruk ve yetenek pozlari.
+-- Eklemler artik AnimationConstraint (C0 salt okunur). Poz, Animator'dan sonra Transform'a eklenir,
+-- bir sonraki karede Animator'dan once geri alinir.
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
 local Debris = game:GetService("Debris")
 
 local Config = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Config"))
 local oyuncu = Players.LocalPlayer
 local efektRemote = ReplicatedStorage:WaitForChild("Remotes"):WaitForChild(Config.Remote.Efekt)
-local orijinaller = {}
-local aktifTweenler = {}
+
+local aktif = {} -- eklem -> { bas, hedef, t0, giris, bitis, cikis }
+local uygulanan = {} -- eklem -> bu karede eklenen ofset
 
 local function motorBul(karakter, ad, ebeveyn)
 	local parca = karakter and karakter:FindFirstChild(ebeveyn)
-	local motor = parca and parca:FindFirstChild(ad)
-	return motor and motor:IsA("Motor6D") and motor or nil
+	local eklem = parca and parca:FindFirstChild(ad)
+	if eklem and (eklem:IsA("Motor6D") or eklem:IsA("AnimationConstraint")) then
+		return eklem
+	end
+	return nil
 end
 
-local function motorC0(motor)
-	if not orijinaller[motor] then
-		orijinaller[motor] = motor.C0
+local function simdikiOfset(eklem)
+	local a = aktif[eklem]
+	if not a then return CFrame.identity end
+	local simdi = os.clock()
+	if simdi < a.t0 + a.giris then
+		local t = (simdi - a.t0) / a.giris
+		t = 1 - (1 - t) * (1 - t)
+		return a.bas:Lerp(a.hedef, t)
+	elseif simdi < a.bitis then
+		return a.hedef
+	elseif simdi < a.bitis + a.cikis then
+		return a.hedef:Lerp(CFrame.identity, (simdi - a.bitis) / a.cikis)
 	end
-	if aktifTweenler[motor] then
-		aktifTweenler[motor]:Cancel()
-	end
+	return nil
 end
 
-local function poz(motor, hedef, sure, bekle)
-	if not motor or not motor.Parent then return end
-	motorC0(motor)
-	local tween = TweenService:Create(motor, TweenInfo.new(sure, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { C0 = orijinaller[motor] * hedef })
-	aktifTweenler[motor] = tween
-	tween:Play()
-	if bekle then
-		task.delay(bekle, function()
-			if motor.Parent and orijinaller[motor] then
-				if aktifTweenler[motor] then aktifTweenler[motor]:Cancel() end
-				local don = TweenService:Create(motor, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.In), { C0 = orijinaller[motor] })
-				aktifTweenler[motor] = don
-				don:Play()
+-- hedef: eklemin dinlenme pozuna gore donus, sure: giris, bekle: hedefte kalma
+local function poz(eklem, hedef, sure, bekle, cikis)
+	if not eklem or not eklem.Parent then return end
+	local bas = simdikiOfset(eklem) or CFrame.identity
+	local simdi = os.clock()
+	aktif[eklem] = {
+		bas = bas,
+		hedef = hedef,
+		t0 = simdi,
+		giris = math.max(sure, 0.01),
+		bitis = simdi + sure + (bekle or 0),
+		cikis = cikis or 0.13,
+	}
+end
+
+RunService.PreAnimation:Connect(function()
+	for eklem, ofset in pairs(uygulanan) do
+		if eklem.Parent then
+			eklem.Transform = ofset:Inverse() * eklem.Transform
+		end
+	end
+	table.clear(uygulanan)
+end)
+
+RunService.PreSimulation:Connect(function()
+	for eklem in pairs(aktif) do
+		if not eklem.Parent then
+			aktif[eklem] = nil
+		else
+			local ofset = simdikiOfset(eklem)
+			if ofset then
+				eklem.Transform = ofset * eklem.Transform
+				uygulanan[eklem] = ofset
+			else
+				aktif[eklem] = nil
 			end
-		end)
+		end
 	end
+end)
+
+local function A(x, y, z)
+	return CFrame.Angles(math.rad(x), math.rad(y or 0), math.rad(z or 0))
 end
 
 local function yumruk(karakter, kombo)
 	local sagOmuz = motorBul(karakter, "RightShoulder", "RightUpperArm")
 	local solOmuz = motorBul(karakter, "LeftShoulder", "LeftUpperArm")
 	local sagDirsek = motorBul(karakter, "RightElbow", "RightLowerArm")
+	local solDirsek = motorBul(karakter, "LeftElbow", "LeftLowerArm")
 	local bel = motorBul(karakter, "Waist", "UpperTorso")
 	local kalca = motorBul(karakter, "RightHip", "RightUpperLeg")
-	local sure = 0.12
+	local sure = 0.08
 	if kombo == 2 then
-		poz(solOmuz, CFrame.Angles(math.rad(-65), math.rad(18), math.rad(-20)), sure)
+		poz(solOmuz, A(-85, 15, -20), sure, 0.06)
+		poz(solDirsek, A(-15), sure, 0.06)
+		poz(bel, A(0, -25, 0), sure, 0.06)
 	elseif kombo == 3 then
-		poz(sagOmuz, CFrame.Angles(math.rad(-115), math.rad(-8), math.rad(28)), sure)
-		poz(sagDirsek, CFrame.Angles(math.rad(-50), 0, 0), sure)
-		poz(bel, CFrame.Angles(math.rad(12), math.rad(22), 0), sure)
-		poz(kalca, CFrame.Angles(math.rad(-18), 0, 0), sure)
+		poz(sagOmuz, A(-150, -8, 25), sure, 0.1, 0.18)
+		poz(sagDirsek, A(-40), sure, 0.1, 0.18)
+		poz(bel, A(12, 25, 0), sure, 0.1, 0.18)
+		poz(kalca, A(-25), sure, 0.1, 0.18)
 	else
-		poz(sagOmuz, CFrame.Angles(math.rad(-65), math.rad(-18), math.rad(20)), sure)
-		poz(sagDirsek, CFrame.Angles(math.rad(-28), 0, 0), sure)
-	end
-	for _, motor in ipairs({ sagOmuz, solOmuz, sagDirsek, bel, kalca }) do
-		if motor then
-			local original = orijinaller[motor]
-			task.delay(0.12, function()
-				if motor.Parent and original then
-					local don = TweenService:Create(motor, TweenInfo.new(0.13), { C0 = original })
-					aktifTweenler[motor] = don
-					don:Play()
-				end
-			end)
-		end
+		poz(sagOmuz, A(-85, -15, 20), sure, 0.06)
+		poz(sagDirsek, A(-15), sure, 0.06)
+		poz(bel, A(0, 25, 0), sure, 0.06)
 	end
 end
 
 local function kolIleri(karakter)
-	for _, bilgi in ipairs({ { "RightShoulder", "RightUpperArm", -78, -8 }, { "LeftShoulder", "LeftUpperArm", -78, 8 } }) do
-		poz(motorBul(karakter, bilgi[1], bilgi[2]), CFrame.Angles(math.rad(bilgi[3]), 0, math.rad(bilgi[4])), 0.16, 3)
-	end
+	poz(motorBul(karakter, "RightShoulder", "RightUpperArm"), A(-85, 0, -8), 0.12, 3)
+	poz(motorBul(karakter, "LeftShoulder", "LeftUpperArm"), A(-85, 0, 8), 0.12, 3)
 end
 
+-- Kement: kolu basin ustune kaldirip dondur, sonra ileri savur
 local function firlat(karakter)
-	poz(motorBul(karakter, "RightShoulder", "RightUpperArm"), CFrame.Angles(math.rad(-125), math.rad(-20), math.rad(18)), 0.12, 0.3)
-	poz(motorBul(karakter, "RightElbow", "RightLowerArm"), CFrame.Angles(math.rad(-70), 0, 0), 0.12, 0.3)
+	local omuz = motorBul(karakter, "RightShoulder", "RightUpperArm")
+	local dirsek = motorBul(karakter, "RightElbow", "RightLowerArm")
+	local bel = motorBul(karakter, "Waist", "UpperTorso")
+	poz(omuz, A(-170, 0, 15), 0.08, 0.04)
+	poz(dirsek, A(-60), 0.08, 0.04)
+	poz(bel, A(0, 30, 0), 0.08, 0.04)
+	task.delay(0.1, function()
+		poz(omuz, A(-170, 120, 15), 0.07, 0)
+	end)
+	task.delay(0.17, function()
+		poz(omuz, A(-80, -10, 10), 0.08, 0.35, 0.2)
+		poz(dirsek, A(-5), 0.08, 0.35, 0.2)
+		poz(bel, A(8, -20, 0), 0.08, 0.35, 0.2)
+	end)
 end
 
 local function yumrukYere(karakter)
-	for _, bilgi in ipairs({ { "RightShoulder", "RightUpperArm", 70, -18 }, { "LeftShoulder", "LeftUpperArm", 70, 18 } }) do
-		poz(motorBul(karakter, bilgi[1], bilgi[2]), CFrame.Angles(math.rad(bilgi[3]), 0, math.rad(bilgi[4])), 0.15, 0.45)
-	end
+	poz(motorBul(karakter, "RightShoulder", "RightUpperArm"), A(-170, 0, 15), 0.12, 0.1)
+	poz(motorBul(karakter, "LeftShoulder", "LeftUpperArm"), A(-170, 0, -15), 0.12, 0.1)
+	task.delay(0.22, function()
+		poz(motorBul(karakter, "RightShoulder", "RightUpperArm"), A(-30, 0, -10), 0.08, 0.3)
+		poz(motorBul(karakter, "LeftShoulder", "LeftUpperArm"), A(-30, 0, 10), 0.08, 0.3)
+		poz(motorBul(karakter, "Waist", "UpperTorso"), A(25), 0.08, 0.3)
+	end)
 end
 
 local function vurusuIsle(veri)

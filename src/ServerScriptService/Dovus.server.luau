@@ -188,8 +188,12 @@ saldirRemote.OnServerEvent:Connect(function(player, tus, hedefYonu)
 
 	if tus == "R" then
 		local ulti = char:GetAttribute("Ulti") or 0
-		if ulti < 100 then return end
-		char:SetAttribute("Ulti", 0)
+		if Config.UltiTest then
+			if os.clock() < (ultiKilit[player] or 0) then return end
+		elseif ulti < 100 then
+			return
+		end
+		char:SetAttribute("Ulti", Config.UltiTest and 100 or 0)
 		ultiKilit[player] = os.clock() + 6 -- ulti kendi hasariyla dolmasin
 	else
 		local jetAktif = oyuncakAdi == "Astronot" and tus == "Q" and aktifR[player] == "Jet"
@@ -358,7 +362,7 @@ end)
 local function karakterDinle(player, char)
 	local hum = char:WaitForChild("Humanoid", 5)
 	if not hum then return end
-	char:SetAttribute("Ulti", 0)
+	char:SetAttribute("Ulti", Config.UltiTest and 100 or 0)
 	hum.Died:Connect(function()
 		blokDurum[player] = false
 		aktifR[player] = nil
