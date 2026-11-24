@@ -89,22 +89,22 @@ local function yumruk(karakter, kombo)
 	local solDirsek = motorBul(karakter, "LeftElbow", "LeftLowerArm")
 	local bel = motorBul(karakter, "Waist", "UpperTorso")
 	local kalca = motorBul(karakter, "RightHip", "RightUpperLeg")
-	-- Olculen eksenler (AnimationConstraint): omuz X+ = kol ileri, sag omuz Z- = ice,
+	-- Olculen eksenler (AnimationConstraint): omuz X+ = kol ileri, sag omuz Z+ = disa (bel donusunu dengeler),
 	-- dirsek X+ = bukme, bel Y+ = sag omuz one, bel X- = one egil, kalca X+ = bacak ileri
 	local sure = 0.07
 	if kombo == 2 then
-		poz(solOmuz, A(92, 0, 12), sure, 0.08, 0.15)
+		poz(solOmuz, A(92, 0, -12), sure, 0.08, 0.15)
 		poz(solDirsek, A(5), sure, 0.08, 0.15)
-		poz(bel, A(-6, -28, 0), sure, 0.08, 0.15)
+		poz(bel, A(-6, -15, 0), sure, 0.08, 0.15)
 	elseif kombo == 3 then
-		poz(sagOmuz, A(155, 0, -12), 0.09, 0.12, 0.2)
+		poz(sagOmuz, A(155, 0, 10), 0.09, 0.12, 0.2)
 		poz(sagDirsek, A(45), 0.09, 0.12, 0.2)
-		poz(bel, A(4, 22, 0), 0.09, 0.12, 0.2)
+		poz(bel, A(4, 15, 0), 0.09, 0.12, 0.2)
 		poz(kalca, A(35), 0.09, 0.12, 0.2)
 	else
-		poz(sagOmuz, A(92, 0, -12), sure, 0.08, 0.15)
+		poz(sagOmuz, A(92, 0, 12), sure, 0.08, 0.15)
 		poz(sagDirsek, A(5), sure, 0.08, 0.15)
-		poz(bel, A(-6, 28, 0), sure, 0.08, 0.15)
+		poz(bel, A(-6, 15, 0), sure, 0.08, 0.15)
 	end
 end
 
