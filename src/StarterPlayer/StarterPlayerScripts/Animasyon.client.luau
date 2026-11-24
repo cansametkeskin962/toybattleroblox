@@ -82,7 +82,45 @@ local function A(x, y, z)
 	return CFrame.Angles(math.rad(x), math.rad(y or 0), math.rad(z or 0))
 end
 
+-- Gercek yumruk animasyonu (Roblox animgen). Vurus 0.45-1.1 sn arasinda, tepe 0.75.
+local YUMRUK_ANIM = "rbxassetid://131432995363380"
+local yumrukIzleri = {} -- animator -> track
+local yumrukSayaci = {}
+task.spawn(function()
+	local a = Instance.new("Animation")
+	a.AnimationId = YUMRUK_ANIM
+	pcall(function() game:GetService("ContentProvider"):PreloadAsync({ a }) end)
+end)
+
+local function yumrukAnim(karakter, kombo)
+	local hum = karakter:FindFirstChildOfClass("Humanoid")
+	local animator = hum and hum:FindFirstChildOfClass("Animator")
+	if not animator then return false end
+	local iz = yumrukIzleri[animator]
+	if not iz or iz.Parent == nil then
+		local a = Instance.new("Animation")
+		a.AnimationId = YUMRUK_ANIM
+		iz = animator:LoadAnimation(a)
+		iz.Priority = Enum.AnimationPriority.Action4
+		iz.Looped = false
+		yumrukIzleri[animator] = iz
+	end
+	if iz.Length <= 0 then return false end -- henuz yuklenmedi: yedek poz
+	local hiz = kombo == 3 and 2.4 or 3.2
+	iz:Play(0.04, 1, hiz)
+	iz.TimePosition = 0.45
+	yumrukSayaci[animator] = (yumrukSayaci[animator] or 0) + 1
+	local benim = yumrukSayaci[animator]
+	task.delay(0.65 / hiz, function()
+		if yumrukSayaci[animator] == benim and iz.IsPlaying then
+			iz:Stop(0.15)
+		end
+	end)
+	return true
+end
+
 local function yumruk(karakter, kombo)
+	if yumrukAnim(karakter, kombo) then return end
 	local sagOmuz = motorBul(karakter, "RightShoulder", "RightUpperArm")
 	local solOmuz = motorBul(karakter, "LeftShoulder", "LeftUpperArm")
 	local sagDirsek = motorBul(karakter, "RightElbow", "RightLowerArm")
@@ -91,20 +129,49 @@ local function yumruk(karakter, kombo)
 	local kalca = motorBul(karakter, "RightHip", "RightUpperLeg")
 	-- Olculen eksenler (AnimationConstraint): omuz X+ = kol ileri, sag omuz Z+ = disa (bel donusunu dengeler),
 	-- dirsek X+ = bukme, bel Y+ = sag omuz one, bel X- = one egil, kalca X+ = bacak ileri
-	local sure = 0.07
-	if kombo == 2 then
-		poz(solOmuz, A(92, 0, -12), sure, 0.08, 0.15)
-		poz(solDirsek, A(5), sure, 0.08, 0.15)
-		poz(bel, A(-6, -15, 0), sure, 0.08, 0.15)
-	elseif kombo == 3 then
-		poz(sagOmuz, A(155, 0, 10), 0.09, 0.12, 0.2)
-		poz(sagDirsek, A(45), 0.09, 0.12, 0.2)
-		poz(bel, A(4, 15, 0), 0.09, 0.12, 0.2)
-		poz(kalca, A(35), 0.09, 0.12, 0.2)
+	-- Boks: once kol gogse cekilir (hazirlik), sonra govde donerek kol firlar, diger el yuzu korur.
+	local hazir, vur, tut, don = 0.06, 0.06, 0.07, 0.18
+	local gard = A(40, 0, 0)
+	local gardDirsek = A(115)
+	local function gardPoz(omuz, dirsek, z)
+		poz(omuz, gard * A(0, 0, z), 0.07, hazir + vur + tut + 0.1, 0.25)
+		poz(dirsek, gardDirsek, 0.07, hazir + vur + tut + 0.1, 0.25)
+	end
+	if kombo == 1 then
+		-- sol direkt (jab)
+		gardPoz(sagOmuz, sagDirsek, 10)
+		poz(solOmuz, A(35, 0, -8), hazir, 0.3)
+		poz(solDirsek, A(120), hazir, 0.3)
+		poz(bel, A(0, 10, 0), hazir, 0.3)
+		task.delay(hazir, function()
+			poz(solOmuz, A(92, 0, -14), vur, tut, don)
+			poz(solDirsek, A(0), vur, tut, don)
+			poz(bel, A(-8, -18, 0), vur, tut, don)
+		end)
+	elseif kombo == 2 then
+		-- sag kroşe/duz: govde tam doner
+		gardPoz(solOmuz, solDirsek, -10)
+		poz(sagOmuz, A(30, 0, 10), hazir, 0.3)
+		poz(sagDirsek, A(125), hazir, 0.3)
+		poz(bel, A(0, -20, 0), hazir, 0.3)
+		task.delay(hazir, function()
+			poz(sagOmuz, A(92, 0, 18), vur, tut, don)
+			poz(sagDirsek, A(0), vur, tut, don)
+			poz(bel, A(-12, 30, 0), vur, tut, don)
+		end)
 	else
-		poz(sagOmuz, A(92, 0, 12), sure, 0.08, 0.15)
-		poz(sagDirsek, A(5), sure, 0.08, 0.15)
-		poz(bel, A(-6, 15, 0), sure, 0.08, 0.15)
+		-- sag aparkat: comel, asagidan yukari patlat
+		gardPoz(solOmuz, solDirsek, -10)
+		poz(sagOmuz, A(10, 0, 12), 0.08, 0.3)
+		poz(sagDirsek, A(100), 0.08, 0.3)
+		poz(bel, A(-22, -12, 0), 0.08, 0.3)
+		poz(kalca, A(-10), 0.08, 0.3)
+		task.delay(0.09, function()
+			poz(sagOmuz, A(150, 0, 8), 0.07, 0.1, 0.22)
+			poz(sagDirsek, A(70), 0.07, 0.1, 0.22)
+			poz(bel, A(12, 22, 0), 0.07, 0.1, 0.22)
+			poz(kalca, A(30), 0.07, 0.1, 0.22)
+		end)
 	end
 end
 

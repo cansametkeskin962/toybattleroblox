@@ -133,6 +133,13 @@ local function beklemeBaslat(player, tus, sure)
 	return true
 end
 
+-- Kamera nisaninin dunyadaki noktasi (gogusten nisan yonune ilk carpma)
+local function nisanNoktasi(root, aim, menzil, rp)
+	local goz = root.Position + Vector3.new(0, 0.7, 0)
+	local r = Workspace:Raycast(goz, aim * menzil, rp)
+	return r and r.Position or goz + aim * menzil
+end
+
 -- Ele gecici silah modeli. Namlu ucu "Namlu" attachment'i. tur: "tabanca" | "isin"
 local function silahYap(char, elAdi, tur)
 	local el = char:FindFirstChild(elAdi)
@@ -171,7 +178,7 @@ local function silahYap(char, elAdi, tur)
 		local _ = govde
 	else
 		parca("Govde", Vector3.new(0.28, 0.4, 1.1), Color3.fromRGB(70, 70, 80), CFrame.new(0, 0.2, -0.35), nil, Enum.Material.Metal)
-		parca("Namlu", Vector3.new(0.7, 0.2, 0.2), Color3.fromRGB(45, 45, 50), CFrame.new(0, 0.28, -1.0) * CFrame.Angles(0, math.rad(90), 0), Enum.PartType.Cylinder, Enum.Material.Metal)
+		parca("NamluBoru", Vector3.new(0.7, 0.2, 0.2), Color3.fromRGB(45, 45, 50), CFrame.new(0, 0.28, -1.0) * CFrame.Angles(0, math.rad(90), 0), Enum.PartType.Cylinder, Enum.Material.Metal)
 		parca("Tutamak", Vector3.new(0.26, 0.65, 0.34), Color3.fromRGB(120, 70, 35), CFrame.new(0, -0.2, 0.05) * CFrame.Angles(math.rad(-15), 0, 0), nil, Enum.Material.Wood)
 		parca("Tetik", Vector3.new(0.08, 0.2, 0.2), Color3.fromRGB(40, 40, 45), CFrame.new(0, -0.05, -0.25))
 		ucZ = -1.38
@@ -272,6 +279,9 @@ saldirRemote.OnServerEvent:Connect(function(player, tus, hedefYonu)
 		kombo.sayac = kombo.sayac % 3 + 1
 		kombo.sonVurus = simdi
 		efektRemote:FireAllClients("yumruk", { karakter = char, kombo = kombo.sayac })
+		-- vururken kucuk bir adim ileri
+		local ileri = Vector3.new(root.CFrame.LookVector.X, 0, root.CFrame.LookVector.Z)
+		if ileri.Magnitude > 0.1 then itmeUygula(root, ileri.Unit * (kombo.sayac == 3 and 26 or 18), 0.08) end
 		local kutu = root.CFrame * CFrame.new(0, 0, -ayar.Menzil * 0.55)
 		local params = OverlapParams.new()
 		params.FilterType = Enum.RaycastFilterType.Exclude
@@ -367,12 +377,16 @@ saldirRemote.OnServerEvent:Connect(function(player, tus, hedefYonu)
 			hum.WalkSpeed = eski * 0.5
 			while os.clock() < bitis and char.Parent and hum.Health > 0 do
 				local aim = sonAim[player] or root.CFrame.LookVector
+				local hedefN = nisanNoktasi(root, aim, ayar.Menzil, rayParams)
 				for i, el in ipairs({ "RightHand", "LeftHand" }) do
 					local parca = char:FindFirstChild(el)
 					local namlu = silahlar[i] and silahlar[i]:FindFirstChild("Namlu", true)
 					local bas = namlu and namlu.WorldPosition or (parca and parca.Position) or root.Position
-					local sonuc = Workspace:Spherecast(bas, 0.8, aim * ayar.Menzil, rayParams)
-					local son = sonuc and sonuc.Position or bas + aim * ayar.Menzil
+					-- iki namlu da nisan noktasina dogru
+					local fark = hedefN - bas
+					local yonu = fark.Magnitude > 1 and fark.Unit or aim
+					local sonuc = Workspace:Spherecast(bas, 0.8, yonu * ayar.Menzil, rayParams)
+					local son = sonuc and sonuc.Position or bas + yonu * ayar.Menzil
 					efektRemote:FireAllClients("tabanca", { baslangic = bas, bitis = son })
 					if sonuc then
 						local hedef = karakterBul(sonuc.Instance)
@@ -428,6 +442,9 @@ saldirRemote.OnServerEvent:Connect(function(player, tus, hedefYonu)
 			local namlu = silah and silah:FindFirstChild("Namlu", true)
 			local bas = namlu and namlu.WorldPosition or root.Position + Vector3.new(0, 1, 0)
 			local aim = sonAim[player] or yon
+			-- namlu sagda: isini nisan noktasina dogru cevir
+			local hedefN = nisanNoktasi(root, aim, ayar.Menzil, rayParams)
+			if (hedefN - bas).Magnitude > 3 then aim = (hedefN - bas).Unit end
 			-- duvara kadar git, karakterlerin icinden gec
 			local haric = { char }
 			local son = bas + aim * ayar.Menzil
