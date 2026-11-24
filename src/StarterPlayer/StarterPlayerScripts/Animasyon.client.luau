@@ -82,36 +82,54 @@ local function A(x, y, z)
 	return CFrame.Angles(math.rad(x), math.rad(y or 0), math.rad(z or 0))
 end
 
--- Gercek yumruk animasyonu (Roblox animgen). Vurus 0.45-1.1 sn arasinda, tepe 0.75.
-local YUMRUK_ANIM = "rbxassetid://131432995363380"
-local yumrukIzleri = {} -- animator -> track
+-- Gercek yumruk animasyonlari (Roblox animgen). Her klipten sadece vurus araligi oynatilir;
+-- hiz, tepe noktasina ~0.1 sn'de varacak sekilde: (tepe - bas) / 0.1
+local YUMRUKLAR = {
+	[1] = { id = "rbxassetid://134714218338910", bas = 1.95, tepe = 2.3, bit = 2.5 }, -- sol direkt
+	[2] = { id = "rbxassetid://131432995363380", bas = 0.45, tepe = 0.75, bit = 1.1 }, -- sag duz
+	[3] = { id = "rbxassetid://117454892144208", bas = 0.7, tepe = 1.15, bit = 1.6 }, -- sol aparkat
+}
+local yumrukIzleri = {} -- animator -> { [kombo] = track }
 local yumrukSayaci = {}
 task.spawn(function()
-	local a = Instance.new("Animation")
-	a.AnimationId = YUMRUK_ANIM
-	pcall(function() game:GetService("ContentProvider"):PreloadAsync({ a }) end)
+	local liste = {}
+	for _, y in ipairs(YUMRUKLAR) do
+		local a = Instance.new("Animation")
+		a.AnimationId = y.id
+		table.insert(liste, a)
+	end
+	pcall(function() game:GetService("ContentProvider"):PreloadAsync(liste) end)
 end)
 
 local function yumrukAnim(karakter, kombo)
 	local hum = karakter:FindFirstChildOfClass("Humanoid")
 	local animator = hum and hum:FindFirstChildOfClass("Animator")
+	local y = YUMRUKLAR[kombo] or YUMRUKLAR[1]
 	if not animator then return false end
-	local iz = yumrukIzleri[animator]
-	if not iz or iz.Parent == nil then
+	local izler = yumrukIzleri[animator]
+	if not izler then
+		izler = {}
+		yumrukIzleri[animator] = izler
+	end
+	local iz = izler[kombo]
+	if not iz then
 		local a = Instance.new("Animation")
-		a.AnimationId = YUMRUK_ANIM
+		a.AnimationId = y.id
 		iz = animator:LoadAnimation(a)
 		iz.Priority = Enum.AnimationPriority.Action4
 		iz.Looped = false
-		yumrukIzleri[animator] = iz
+		izler[kombo] = iz
 	end
 	if iz.Length <= 0 then return false end -- henuz yuklenmedi: yedek poz
-	local hiz = kombo == 3 and 2.4 or 3.2
+	for k, digeri in pairs(izler) do
+		if k ~= kombo and digeri.IsPlaying then digeri:Stop(0.05) end
+	end
+	local hiz = (y.tepe - y.bas) / 0.1
 	iz:Play(0.04, 1, hiz)
-	iz.TimePosition = 0.45
+	iz.TimePosition = y.bas
 	yumrukSayaci[animator] = (yumrukSayaci[animator] or 0) + 1
 	local benim = yumrukSayaci[animator]
-	task.delay(0.65 / hiz, function()
+	task.delay((y.bit - y.bas) / hiz, function()
 		if yumrukSayaci[animator] == benim and iz.IsPlaying then
 			iz:Stop(0.15)
 		end

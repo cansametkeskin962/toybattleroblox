@@ -21,7 +21,7 @@ local BeklemeRemote = Remotes:WaitForChild(Config.Remote.Bekleme)
 -- ===================== AYARLAR =====================
 local OMUZ_KILIDI = true -- karakter kameranin baktigi yone doner (Shift Lock benzeri)
 local FAREYI_KILITLE = true -- PC'de fare ekran ortasina kilitlenir (Sol Alt basili = serbest)
-local KAMERA_OFSETI = Vector3.new(1.75, 0.25, 0) -- omuz kamerasi kaymasi
+local KAMERA_OFSETI = Vector3.new(2.1, 0.6, 0) -- omuz kamerasi kaymasi
 local DOKUNMA_MAKS_SURE = 0.25 -- bu sureden kisa dokunus = M1
 local DOKUNMA_MAKS_KAYMA = 18 -- piksel; daha fazla kayarsa kamera cevirme sayilir
 local VARSAYILAN_BEKLEME = { M1 = 0.35, Q = 5, R = 0 }
@@ -133,25 +133,53 @@ kontrolGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 kontrolGui.DisplayOrder = 4
 kontrolGui.Parent = oyuncuGui
 
--- Ekran ortasinda kucuk nisangah (fare kilitliyken gorunur)
+-- Ekran ortasinda arti nisangah (oyunda hep gorunur). Ayri gui: GuiInset'i yok say, tam kamera merkezi.
+local nisanGui = Instance.new("ScreenGui")
+nisanGui.Name = "NisanArayuz"
+nisanGui.ResetOnSpawn = false
+nisanGui.IgnoreGuiInset = true
+nisanGui.DisplayOrder = 2
+nisanGui.Parent = oyuncuGui
 local nisangah = Instance.new("Frame")
 nisangah.Name = "Nisangah"
 nisangah.AnchorPoint = Vector2.new(0.5, 0.5)
 nisangah.Position = UDim2.fromScale(0.5, 0.5)
-nisangah.Size = UDim2.fromOffset(8, 8)
-nisangah.BackgroundColor3 = BEYAZ
+nisangah.Size = UDim2.fromOffset(30, 30)
+nisangah.BackgroundTransparency = 1
 nisangah.Visible = false
-nisangah.Parent = kontrolGui
+nisangah.Parent = nisanGui
 do
+	local function cubuk(boyut, konum)
+		local f = Instance.new("Frame")
+		f.AnchorPoint = Vector2.new(0.5, 0.5)
+		f.Size = boyut
+		f.Position = konum
+		f.BackgroundColor3 = BEYAZ
+		f.BorderSizePixel = 0
+		local cizgi = Instance.new("UIStroke")
+		cizgi.Thickness = 1.5
+		cizgi.Color = KOYU
+		cizgi.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+		cizgi.Parent = f
+		f.Parent = nisangah
+		return f
+	end
+	local nokta = cubuk(UDim2.fromOffset(5, 5), UDim2.fromScale(0.5, 0.5))
 	local kose = Instance.new("UICorner")
 	kose.CornerRadius = UDim.new(1, 0)
-	kose.Parent = nisangah
-	local cizgi = Instance.new("UIStroke")
-	cizgi.Thickness = 2
-	cizgi.Color = KOYU
-	cizgi.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-	cizgi.Parent = nisangah
+	kose.Parent = nokta
+	cubuk(UDim2.fromOffset(3, 8), UDim2.new(0.5, 0, 0.5, -11))
+	cubuk(UDim2.fromOffset(3, 8), UDim2.new(0.5, 0, 0.5, 11))
+	cubuk(UDim2.fromOffset(8, 3), UDim2.new(0.5, -11, 0.5, 0))
+	cubuk(UDim2.fromOffset(8, 3), UDim2.new(0.5, 11, 0.5, 0))
 end
+
+-- Kamera: omuz ustu, daha yakin
+oyuncu.CameraMaxZoomDistance = 11
+oyuncu.CameraMinZoomDistance = 8
+task.delay(1, function()
+	oyuncu.CameraMinZoomDistance = 3
+end)
 
 -- Sag altta mobil buton kumesi (Roblox'un ziplama butonunun solunda)
 local mobilCerceve = Instance.new("Frame")
@@ -485,5 +513,5 @@ RunService:BindToRenderStep("OyuncakOmuzKamerasi", Enum.RenderPriority.Camera.Va
 		UserInputService.MouseIconEnabled = true
 		fareKilitli = false
 	end
-	nisangah.Visible = kilitle
+	nisangah.Visible = aktif
 end)

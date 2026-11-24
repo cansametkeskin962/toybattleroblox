@@ -271,6 +271,9 @@ saldirRemote.OnServerEvent:Connect(function(player, tus, hedefYonu)
 	rayParams.FilterType = Enum.RaycastFilterType.Exclude
 	rayParams.FilterDescendantsInstances = { char }
 
+	-- silahli ulti sirasinda yumruk/kement yok
+	if tus ~= "R" and (aktifR[player] == "Kovboy" or aktifR[player] == "Isin") then return end
+
 	if tus == "M1" then
 		local kombo = komboDurum[player] or { sayac = 0, sonVurus = 0 }
 		komboDurum[player] = kombo
@@ -379,9 +382,8 @@ saldirRemote.OnServerEvent:Connect(function(player, tus, hedefYonu)
 				local aim = sonAim[player] or root.CFrame.LookVector
 				local hedefN = nisanNoktasi(root, aim, ayar.Menzil, rayParams)
 				for i, el in ipairs({ "RightHand", "LeftHand" }) do
-					local parca = char:FindFirstChild(el)
-					local namlu = silahlar[i] and silahlar[i]:FindFirstChild("Namlu", true)
-					local bas = namlu and namlu.WorldPosition or (parca and parca.Position) or root.Position
+					-- kol pozu istemcide; sunucuda el asagida kalir. Namlu ucunu govdeye gore hesapla.
+					local bas = (root.CFrame * CFrame.new(i == 1 and 0.75 or -0.75, 0.85, -2.3)).Position
 					-- iki namlu da nisan noktasina dogru
 					local fark = hedefN - bas
 					local yonu = fark.Magnitude > 1 and fark.Unit or aim
@@ -439,8 +441,8 @@ saldirRemote.OnServerEvent:Connect(function(player, tus, hedefYonu)
 				if silah then silah:Destroy() end
 				return
 			end
-			local namlu = silah and silah:FindFirstChild("Namlu", true)
-			local bas = namlu and namlu.WorldPosition or root.Position + Vector3.new(0, 1, 0)
+			-- kol pozu istemcide: isin ucunu govdeye gore hesapla (iki el ileri)
+			local bas = (root.CFrame * CFrame.new(0.3, 0.85, -2.6)).Position
 			local aim = sonAim[player] or yon
 			-- namlu sagda: isini nisan noktasina dogru cevir
 			local hedefN = nisanNoktasi(root, aim, ayar.Menzil, rayParams)
